@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ensure python can import the `pylib` package located at "$HOME/.local/pylib"
+export PYTHONPATH="$HOME/.local${PYTHONPATH:+:$PYTHONPATH}"
+
+exec python -m pylib addhost "$@"

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Generic, Literal, TypeAlias, TypeVar
 
 
-# ---- Config-related types ----
+# ---- config-related types ----
 
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class HostEntry:
     macs: str = ""
 
 
-# ---- Identifier helpers ----
+# ---- normalized id type ----
 
 
 @dataclass(frozen=True)
@@ -42,7 +42,7 @@ class NormalizeResult:
     error: str = ""
 
 
-# ---- Prompting / selection result types ----
+# ---- prompting / selection result types ----
 
 
 T = TypeVar("T")

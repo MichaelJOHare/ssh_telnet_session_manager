@@ -5,6 +5,7 @@ from .config_paths import ensure_config_file, ssh_config, telnet_config
 from .types import Transport
 
 
+# prompt user to select transport method (ssh/telnet), returns Transport or None if cancelled
 def select_transport() -> Transport | None:
     while True:
         clear_screen()

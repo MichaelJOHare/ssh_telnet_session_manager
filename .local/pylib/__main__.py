@@ -6,6 +6,8 @@ from .addhost.addhost_app import run_addhost
 from .vmsmenu.vmsmenu_app import run_vmsmenu
 
 
+# TODO: refactor return codes
+#       refactor ctrl-c/ctrl-z handling to main only?
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
 
@@ -28,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Notes:")
         print("  - Both commands are interactive.")
         print("  - Extra CLI args are ignored (except --help / -h).")
-        print("  - Hosts can be grouped as 'group.nickname' (e.g. prod.db1).")
+        print("  - Hosts can be grouped as 'group.NICKNAME' (e.g. l2.IA21).")
         print("  - Set NO_COLOR=1 to disable ANSI colors.")
         return 0
 
@@ -67,10 +69,18 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if cmd == "vmsmenu":
-        return run_vmsmenu()
+        try:
+            return run_vmsmenu()
+        except KeyboardInterrupt:
+            print()
+            return 0
 
     if cmd == "addhost":
-        return run_addhost()
+        try:
+            return run_addhost()
+        except KeyboardInterrupt:
+            print()
+            return 0
 
     print(f"Unknown command: {cmd}")
     print("Try: vmsmenu --help or addhost --help")

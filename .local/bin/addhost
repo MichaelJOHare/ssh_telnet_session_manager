@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ensure python can import the `pylib` package located at "$HOME/.local/pylib"
-export PYTHONPATH="$HOME/.local${PYTHONPATH:+:$PYTHONPATH}"
-
-# allow running addhost via `addhost` command in the shell
-exec python -m pylib addhost "$@"
+# delegate to the shared launcher script
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$script_dir/launcher" addhost "$@"

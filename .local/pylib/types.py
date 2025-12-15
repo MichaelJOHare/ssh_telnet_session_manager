@@ -7,7 +7,6 @@ from typing import Generic, Literal, TypeAlias, TypeVar
 
 # ---- config-related types ----
 
-
 @dataclass(frozen=True)
 class TransportConfig:
     key: str
@@ -34,7 +33,6 @@ class HostEntry:
 
 # ---- normalized id type ----
 
-
 @dataclass(frozen=True)
 class NormalizeResult:
     ok: bool
@@ -43,7 +41,6 @@ class NormalizeResult:
 
 
 # ---- prompting / selection result types ----
-
 
 T = TypeVar("T")
 

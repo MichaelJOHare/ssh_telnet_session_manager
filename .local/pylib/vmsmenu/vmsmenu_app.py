@@ -7,7 +7,6 @@ from ..config_utils import GROUP_DELIMITER, load_host_aliases, split_hosts_by_gr
 from .vmsmenu_utils import attempt_connection, render_menu
 
 
-# TODO: refactor return codes
 def run_vmsmenu() -> int:
     last_msg = [""]
 
@@ -18,7 +17,7 @@ def run_vmsmenu() -> int:
 
     hosts = load_host_aliases(transport.config_file)
     if not hosts:
-        print(f"No hosts found in {transport.config_file}")
+        print(f"{Ansi.RED}No hosts found in {transport.config_file}{Ansi.RESET}")
         return 1
 
     main_hosts, group_map, group_names = split_hosts_by_group(hosts)
@@ -44,6 +43,7 @@ def run_vmsmenu() -> int:
     )
 
     while True:
+        # main menu
         msg = last_msg[0]
         last_msg[0] = ""
         render_menu(main_title, main_subtitle, labels, types=types, message=msg)

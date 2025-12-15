@@ -17,11 +17,6 @@ def clear_screen() -> None:
     sys.stdout.flush()
 
 
-def erase_prev_line() -> None:
-    sys.stdout.write("\033[1A\033[2K")
-    sys.stdout.flush()
-
-
 def set_title(title: str) -> None:
     # xterm title escape
     sys.stdout.write(f"\033]0;{title}\007")

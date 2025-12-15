@@ -3,7 +3,9 @@ from __future__ import annotations
 from .types import NormalizeResult
 
 
-def normalize_identifier(raw: str, *, case_mode: str = "lower", allow_empty: bool = False) -> NormalizeResult:
+# takes raw group or nickname string and trims whitespace, enforces alphanumeric, adjusts case
+def normalize_identifier(raw: str, *, 
+                         case_mode: str = "lower", allow_empty: bool = False) -> NormalizeResult:
     trimmed = "".join((raw or "").split())
 
     if trimmed == "":

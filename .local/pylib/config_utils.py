@@ -8,14 +8,17 @@ from typing import Iterable
 from .types import HostEntry
 
 
+# global delimiter constant for host entries (e.g. group.MEMBER)
 GROUP_DELIMITER = "."
 
 
+# constants for regex patterns
 _HOST_EXACT_RE = re.compile(r"^Host\s+(?P<alias>[^\s]+)\s*$")
 _HOST_ANY_RE = re.compile(r"^Host\s+(?P<aliases>.+)$")
 _KEYVAL_RE = re.compile(r"^\s*(?P<key>[A-Za-z][A-Za-z0-9]*)\s+(?P<value>.+?)\s*$")
 
 
+# load all host aliases from the config file (including grouped hosts)
 def load_host_aliases(config_file: Path) -> list[str]:
     aliases: list[str] = []
     if not config_file.exists():
@@ -30,6 +33,7 @@ def load_host_aliases(config_file: Path) -> list[str]:
     return aliases
 
 
+# list all unique group names from the config file
 def list_groups(config_file: Path, *, delimiter: str = GROUP_DELIMITER) -> list[str]:
     groups: set[str] = set()
     for alias in load_host_aliases(config_file):
@@ -40,7 +44,9 @@ def list_groups(config_file: Path, *, delimiter: str = GROUP_DELIMITER) -> list[
     return sorted(groups)
 
 
-def find_aliases_for_nickname(nickname_upper: str, config_file: Path, *, delimiter: str = GROUP_DELIMITER) -> list[str]:
+# find all aliases (including grouped) that match the given nickname
+def find_aliases_for_nickname(nickname_upper: str, config_file: Path, *, 
+                              delimiter: str = GROUP_DELIMITER) -> list[str]:
     needle = nickname_upper.upper()
     matches: list[str] = []
     for alias in load_host_aliases(config_file):
@@ -54,6 +60,7 @@ def find_aliases_for_nickname(nickname_upper: str, config_file: Path, *, delimit
     return matches
 
 
+# check if a host entry exactly matching the given alias exists
 def host_entry_exists(alias: str, config_file: Path) -> bool:
     if not config_file.exists():
         return False
@@ -65,6 +72,7 @@ def host_entry_exists(alias: str, config_file: Path) -> bool:
     return False
 
 
+# read host entry values from the config file
 def read_host_values(alias: str, config_file: Path) -> tuple[str, str, str, str, str]:
     hostname = ""
     port = ""
@@ -76,7 +84,7 @@ def read_host_values(alias: str, config_file: Path) -> tuple[str, str, str, str,
     for raw_line in config_file.read_text(encoding="utf-8", errors="replace").splitlines():
         host_m = _HOST_ANY_RE.match(raw_line)
         if host_m:
-            # block starts only if the Host line is exactly "Host <alias>"
+            # block starts only if the host line is exactly: Host <alias>
             exact = _HOST_EXACT_RE.match(raw_line)
             if exact and exact.group("alias") == alias:
                 in_block = True
@@ -106,6 +114,7 @@ def read_host_values(alias: str, config_file: Path) -> tuple[str, str, str, str,
     return hostname, port, hostkey, kex, macs
 
 
+# remove host entry from config file, keeps newlines intact
 def remove_host_entry(alias: str, config_file: Path) -> None:
     if not config_file.exists():
         return
@@ -132,17 +141,17 @@ def remove_host_entry(alias: str, config_file: Path) -> None:
     _atomic_write_text(config_file, "".join(out))
 
 
+# append host entry to config file
 def append_host_entry(entry: HostEntry, config_file: Path) -> None:
     prefix = ""
     if config_file.exists() and config_file.stat().st_size > 0:
         text = config_file.read_text(encoding="utf-8", errors="replace")
-        # Only add a leading blank line if the file doesn't already end with one.
         if not text.endswith("\n"):
+            # if no newline, add one and add a blank separator line
+            prefix = "\n\n"
+        elif not text.endswith("\n\n"):
+            # add a blank separator line
             prefix = "\n"
-        else:
-            # if last line isn't blank, add a blank line
-            if not text.endswith("\n\n"):
-                prefix = "\n"
 
     block_lines = [
         f"{prefix}Host {entry.alias}\n",
@@ -161,22 +170,24 @@ def append_host_entry(entry: HostEntry, config_file: Path) -> None:
         f.writelines(block_lines)
 
 
+# upsert (add or update) host entry in config file
 def upsert_host_entry(entry: HostEntry, config_file: Path) -> None:
     remove_host_entry(entry.alias, config_file)
     append_host_entry(entry, config_file)
 
 
+# writes to a temporary file and then moves it to the target path
 def _atomic_write_text(path: Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True) # use ensure_config_file?
     with NamedTemporaryFile("w", delete=False, encoding="utf-8", newline="") as tmp:
         tmp.write(content)
         tmp_path = Path(tmp.name)
     tmp_path.replace(path)
 
 
-def split_hosts_by_group(
-    hosts: Iterable[str], *, delimiter: str = GROUP_DELIMITER
-) -> tuple[list[str], dict[str, list[str]], list[str]]:
+# split hosts into main/ungrouped hosts and grouped hosts
+def split_hosts_by_group(hosts: Iterable[str], *, 
+                         delimiter: str = GROUP_DELIMITER) -> tuple[list[str], dict[str, list[str]], list[str]]:
     main_hosts: list[str] = []
     grouped: dict[str, list[str]] = {}
 

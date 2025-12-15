@@ -21,6 +21,12 @@
 # User PATH additions so that we can type eg. vmsmenu directly
 export PATH="$HOME/.local/bin:$PATH"
 
+# Windows Python installation
+PYWIN_DIR="/c/Users/Michael Ohare/AppData/Local/Python/pythoncore-3.14-64"
+if [[ -x "$PYWIN_DIR/python.exe" ]]; then
+	export PATH="$PYWIN_DIR:$PYWIN_DIR/Scripts:$PATH"
+fi
+
 # Shell Options
 #
 # See man bash for more options...

@@ -39,7 +39,7 @@ fi
 PS1='\[\033]0;$PWD\007\]'      # set window title
 PS1="$PS1"'\n'                 # new line
 PS1="$PS1"'\[\033[32m\]'       # change to green
-PS1="$PS1"'mike '              # changed to my name, was: user@host<space>
+PS1="$PS1"'mike '              # edit this to change prompt, was: user@host<space>
 PS1="$PS1"'\[\033[35m\]'       # change to purple
 PS1="$PS1"'\s '                # changed to active shell, was: show MSYSTEM
 PS1="$PS1"'\[\033[33m\]'       # change to brownish yellow

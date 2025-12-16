@@ -1,0 +1,259 @@
+{
+    "$help": "https://aka.ms/terminal-documentation",
+    "$schema": "https://aka.ms/terminal-profiles-schema",
+    "actions": [
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOM"
+            },
+            "id": "User.sendInput.NumpadEnter"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOp"
+            },
+            "id": "User.sendInput.Numpad0"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOq"
+            },
+            "id": "User.sendInput.Numpad1"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOr"
+            },
+            "id": "User.sendInput.Numpad2"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOs"
+            },
+            "id": "User.sendInput.Numpad3"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOt"
+            },
+            "id": "User.sendInput.Numpad4"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOu"
+            },
+            "id": "User.sendInput.Numpad5"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOv"
+            },
+            "id": "User.sendInput.Numpad6"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOw"
+            },
+            "id": "User.sendInput.Numpad7"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOx"
+            },
+            "id": "User.sendInput.Numpad8"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOy"
+            },
+            "id": "User.sendInput.Numpad9"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOn"
+            },
+            "id": "User.sendInput.NumpadDecimal"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOP"
+            },
+            "id": "User.sendInput.NumLock"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOQ"
+            },
+            "id": "User.sendInput.Divide"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOR"
+            },
+            "id": "User.sendInput.Multiply"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOS"
+            },
+            "id": "User.sendInput.Subtract"
+        },
+        {
+            "command": {
+                "action": "sendInput",
+                "input": "\u001bOl"
+            },
+            "id": "User.sendInput.Add"
+        }
+    ],
+    "centerOnLaunch": true,
+    "copyFormatting": "none",
+    "copyOnSelect": true,
+    "defaultProfile": "{f257f139-4ab8-4f0c-a11d-654bfac9e40f}",
+    "initialCols": 132,
+    "initialPosition": ",",
+    "keybindings": [
+        {
+            "id": "Terminal.CopyToClipboard",
+            "keys": "ctrl+c"
+        },
+        {
+            "id": "User.sendInput.Add",
+            "keys": "numpad_plus"
+        },
+        {
+            "id": "User.sendInput.Numpad8",
+            "keys": "numpad8"
+        },
+        {
+            "id": "User.sendInput.Multiply",
+            "keys": "numpad_multiply"
+        },
+        {
+            "id": "Terminal.PasteFromClipboard",
+            "keys": "ctrl+v"
+        },
+        {
+            "id": "User.sendInput.NumpadDecimal",
+            "keys": "numpad_period"
+        },
+        {
+            "id": "User.sendInput.NumLock",
+            "keys": "ctrl+numpad_divide"
+        },
+        {
+            "id": "Terminal.DuplicatePaneAuto",
+            "keys": "alt+shift+d"
+        },
+        {
+            "id": "User.sendInput.Divide",
+            "keys": "numpad_divide"
+        },
+        {
+            "id": "User.sendInput.Subtract",
+            "keys": "numpad_minus"
+        },
+        {
+            "id": "User.sendInput.Numpad0",
+            "keys": "numpad0"
+        },
+        {
+            "id": "User.sendInput.NumpadEnter",
+            "keys": "ctrl+numpad_plus"
+        },
+        {
+            "id": "User.sendInput.Numpad1",
+            "keys": "numpad1"
+        },
+        {
+            "id": "User.sendInput.Numpad2",
+            "keys": "numpad2"
+        },
+        {
+            "id": "User.sendInput.Numpad3",
+            "keys": "numpad3"
+        },
+        {
+            "id": "User.sendInput.Numpad4",
+            "keys": "numpad4"
+        },
+        {
+            "id": "User.sendInput.Numpad5",
+            "keys": "numpad5"
+        },
+        {
+            "id": "User.sendInput.Numpad6",
+            "keys": "numpad6"
+        },
+        {
+            "id": "User.sendInput.Numpad7",
+            "keys": "numpad7"
+        },
+        {
+            "id": "User.sendInput.Numpad9",
+            "keys": "numpad9"
+        }
+    ],
+    "newTabMenu": [
+        {
+            "type": "remainingProfiles"
+        }
+    ],
+    "profiles": {
+        "defaults": {
+            "colorScheme": "One Half Dark"
+        },
+        "list": [
+            {
+                "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+                "hidden": false,
+                "name": "Windows PowerShell"
+            },
+            {
+                "commandline": "%SystemRoot%\\System32\\cmd.exe",
+                "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+                "hidden": true,
+                "name": "Command Prompt"
+            },
+            {
+                "guid": "{b453ae62-4e3d-5e58-b989-0a998ec441b8}",
+                "hidden": true,
+                "name": "Azure Cloud Shell",
+                "source": "Windows.Terminal.Azure"
+            },
+            {
+                "colorScheme": "One Half Dark",
+                "commandline": "C:\\msys64\\msys2_shell.cmd -defterm -here -no-start -ucrt64",
+                "cursorShape": "filledBox",
+                "font": {
+                    "face": "Cascadia Code"
+                },
+                "guid": "{f257f139-4ab8-4f0c-a11d-654bfac9e40f}",
+                "hidden": false,
+                "historySize": 200000,
+                "icon": "C:\\msys64\\mingw32.ico",
+                "name": "Bash",
+                "startingDirectory": "%USERPROFILE%"
+            }
+        ]
+    },
+    "schemes": [],
+    "themes": []
+}

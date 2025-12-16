@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .types import TransportConfig
+from .types import Transport
 
 
-def ssh_config() -> TransportConfig:
-    return TransportConfig(key="ssh", label="SSH", config_path=Path.home() / ".ssh" / "config")
+def ssh_config() -> Transport:
+    return Transport(key="ssh", label="SSH", config_file=Path.home() / ".ssh" / "config")
 
 
-def telnet_config() -> TransportConfig:
-    return TransportConfig(key="telnet", label="Telnet", config_path=Path.home() / ".telnet" / "config")
+def telnet_config() -> Transport:
+    return Transport(key="telnet", label="Telnet", config_file=Path.home() / ".telnet" / "config")
 
 
 def ensure_config_file(path: Path) -> None:

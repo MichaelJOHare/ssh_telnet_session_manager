@@ -11,31 +11,14 @@ if [[ "$cmd" != "addhost" && "$cmd" != "vmsmenu" ]]; then
 	exit 1
 fi
 
-# require MSYS2 environment
-msys_home="$HOME"
-if ! command -v cygpath >/dev/null 2>&1; then
-	echo "Error: MSYS2 is required (missing: cygpath)." >&2
-	exit 1
-fi
-
 # convert MSYS paths to windows paths for windows python
-win_home="$(cygpath -w "$msys_home")"
-win_local="$(cygpath -w "$msys_home/.local")"
+win_home="$(cygpath -w "$HOME")"
 msys2_usr_bin="$(cygpath -w /usr/bin)"
 
-# windows path separator
-pathsep=";"
+# add pylib to PYTHONPATH
+export PYTHONPATH="$HOME/.local${PYTHONPATH:+:$PYTHONPATH}"
 
-# construct pythonpath
-pythonpath="$win_local"
-if [[ -n "${PYTHONPATH:-}" ]]; then
-	pythonpath="$pythonpath$pathsep$PYTHONPATH"
-fi
-
-# run windows python with a HOME that points at the msys2 home
-#  - test all this and userprofile are needed after msys2_usr_bin change
-#
+# run windows python with a USERPROFILE that points at the msys2 home for Path.home()
 # and pass MSYS2_USR_BIN so Python can call MSYS2 ssh/telnet explicitly
-exec env HOME="$win_home" USERPROFILE="$win_home" PYTHONPATH="$pythonpath" \
-	MSYS2_USR_BIN="$msys2_usr_bin" \
+exec env USERPROFILE="$win_home" MSYS2_USR_BIN="$msys2_usr_bin" \
 	python -m pylib "$cmd" "$@"

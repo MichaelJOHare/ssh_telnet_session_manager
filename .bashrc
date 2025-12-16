@@ -22,9 +22,10 @@
 export PATH="$HOME/.local/bin:$PATH"
 
 # Windows Python installation
-PYWIN_DIR="/c/Users/Michael Ohare/AppData/Local/Python/pythoncore-3.14-64"
+win_home="$(cygpath -u "$USERPROFILE")"
+PYWIN_DIR="$win_home/AppData/Local/Python/pythoncore-3.14-64"
 if [[ -x "$PYWIN_DIR/python.exe" ]]; then
-	export PATH="$PYWIN_DIR:$PYWIN_DIR/Scripts:$PATH"
+	export PATH="$PYWIN_DIR:$PATH"
 fi
 
 # Shell Options

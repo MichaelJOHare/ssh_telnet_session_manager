@@ -2,17 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generic, Literal, TypeAlias, TypeVar
+from typing import Generic, Literal, Protocol, TypeAlias, TypeVar
 
 
 # ---- config-related types ----
-
-@dataclass(frozen=True)
-class TransportConfig:
-    key: str
-    label: str
-    config_path: Path
-
 
 @dataclass(frozen=True)
 class Transport:
@@ -31,13 +24,35 @@ class HostEntry:
     macs: str = ""
 
 
-# ---- normalized id type ----
-
 @dataclass(frozen=True)
 class NormalizeResult:
     ok: bool
     value: str = ""
     error: str = ""
+
+
+@dataclass(frozen=True)
+class CategorizedHosts:
+    main_hosts: list[str]
+    group_map: dict[str, list[str]]
+    group_names: list[str]
+
+
+@dataclass
+class MenuVars:
+    main_hosts: list[str]
+    group_map: dict[str, list[str]]
+    group_names: list[str]
+    labels: list[str]
+    types: list[str]
+    values: list[str]
+    transport: Transport
+
+
+# ---- menu callback types ----
+
+class HostAction(Protocol):
+    def __call__(self, host_label: str, transport: Transport, *, last_msg_out: list[str]) -> bool: ...
 
 
 # ---- prompting / selection result types ----
@@ -93,10 +108,3 @@ class Choice(Generic[T]):
     label: str
     value: T
     kind: str = ""  # e.g. 'host' or 'group'
-
-
-@dataclass(frozen=True)
-class AlgorithmSettings:
-    hostkey: str
-    kex: str
-    macs: str

@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import sys
 
-from .addhost.addhost_app import run_addhost
-from .vmsmenu.vmsmenu_app import run_vmsmenu
+from .addhost_app import run_addhost
+from .vmsmenu_app import run_vmsmenu
 
 
-# TODO: refactor return codes
-#       refactor ctrl-c/ctrl-z handling to main only?
+# TODO: refactor return codes and error handling? last_msg pattern is awkward - use PromptResult?
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
 

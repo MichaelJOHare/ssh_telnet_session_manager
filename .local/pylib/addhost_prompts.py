@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from .ansi import Ansi
 from .ident import normalize_identifier
 from .prompting import prompt_yes_no, prompt_text
@@ -10,7 +8,7 @@ from .menu_utils import format_host_details, format_host_display
 from .types import PromptCancel, PromptInvalid, PromptOk, PromptResult
 
 
-def prompt_nickname(config_file: Path, last_msg: list[str]) -> PromptResult[str]:
+def prompt_nickname(aliases: list[str], last_msg: list[str]) -> PromptResult[str]:
     raw = prompt_text(f"Enter unique {Ansi.GREEN}nickname{Ansi.RESET} for the host (or {Ansi.RED}E{Ansi.RESET} to exit): ").strip()
     if raw.lower() == "e":
         return PromptCancel()
@@ -21,7 +19,7 @@ def prompt_nickname(config_file: Path, last_msg: list[str]) -> PromptResult[str]
         return PromptInvalid()
 
     nickname = norm.value
-    matches = find_aliases_for_nickname(nickname, config_file)
+    matches = find_aliases_for_nickname(nickname, aliases)
     if matches:
         resolved_result = select_existing_alias(nickname, matches, last_msg)
         match resolved_result:
@@ -164,6 +162,10 @@ def prompt_port(current: str, last_msg: list[str]) -> PromptResult[str]:
     if raw.lower() == "e":
         last_msg[0] = "Port entry cancelled. Any changes to host were not saved."
         return PromptCancel()
+    if raw:
+        if not raw.isdigit() or not (1 <= int(raw) <= 65535):
+            last_msg[0] = "Port must be a number between 1 and 65535."
+            return PromptInvalid()
     return PromptOk(raw or cur)
 
 

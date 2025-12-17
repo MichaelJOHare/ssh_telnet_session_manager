@@ -5,6 +5,7 @@ from .prompting import prompt_yes_no
 from .types import PromptCancel, PromptInvalid, PromptOk, HostEntry
 from .menu_utils import add_or_list_menu, format_host_display, setup_menu
 from .config_utils import (
+    load_host_aliases,
     read_host_values, 
     remove_host_entry, 
     upsert_host_entry, 
@@ -45,7 +46,8 @@ def run_addhost() -> int:
             last_msg[0] = ""
 
         host_alias: str = ""
-        nickname_result = prompt_nickname(transport.config_file, last_msg)
+        aliases = load_host_aliases(transport.config_file)
+        nickname_result = prompt_nickname(aliases, last_msg)
         match nickname_result:
             case PromptCancel():
                 clear_screen()

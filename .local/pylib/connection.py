@@ -113,7 +113,8 @@ def _msys2_exe(name: str) -> str:
     return name
 
 
-def ssh_connect(host_alias: str, transport: Transport, *, timeout_seconds: int = _CONNECT_TIMEOUT_SECONDS) -> int:
+def ssh_connect(host_alias: str, transport: Transport, *, 
+                timeout_seconds: int = _CONNECT_TIMEOUT_SECONDS) -> int:
     try:
         user = prompt_text(f"{Ansi.MAGENTA}login{Ansi.RESET} as: ").strip()
     except KeyboardInterrupt:
@@ -145,7 +146,8 @@ def ssh_connect(host_alias: str, transport: Transport, *, timeout_seconds: int =
         set_title("VMS MENU")
 
 
-def telnet_connect(host_alias: str, config_file: Path, *, timeout_seconds: int = _CONNECT_TIMEOUT_SECONDS) -> int:
+def telnet_connect(host_alias: str, config_file: Path, *, 
+                   timeout_seconds: int = _CONNECT_TIMEOUT_SECONDS) -> int:
     hostname, port, *_ = read_host_values(host_alias, config_file)
     if not hostname:
         return _RC_NO_HOSTNAME
@@ -168,7 +170,8 @@ def telnet_connect(host_alias: str, config_file: Path, *, timeout_seconds: int =
         set_title("VMS MENU")
 
 
-def attempt_connection(host_label: str, transport: Transport, *, last_msg_out: list[str]) -> bool:
+def attempt_connection(host_label: str, transport: Transport, *, 
+                       last_msg_out: list[str]) -> bool:
     timeout_seconds = _CONNECT_TIMEOUT_SECONDS
 
     if transport.key == "ssh":

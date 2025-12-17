@@ -31,11 +31,11 @@ def load_host_aliases(config_file: Path) -> list[str]:
     return aliases
 
 
-def find_aliases_for_nickname(nickname_upper: str, config_file: Path, *, 
+def find_aliases_for_nickname(nickname_upper: str, aliases: Iterable[str], *, 
                               delimiter: str = GROUP_DELIMITER) -> list[str]:
     needle = nickname_upper.upper()
     matches: list[str] = []
-    for alias in load_host_aliases(config_file): # TODO: fix this, we shouldn't read config file every time
+    for alias in aliases:
         if alias.upper() == needle:
             matches.append(alias)
             continue

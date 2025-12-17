@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .ansi import Ansi, clear_screen
-from .config_utils import GROUP_DELIMITER, load_host_aliases, read_host_values, categorize_hosts
+from .config_utils import GROUP_DELIMITER, load_host_aliases, read_host_values, categorize_hosts, remove_host_entry
 from .transport_menu import select_transport
 from .types import HostAction, MenuVars, Transport
 from .prompting import SelectionBack, SelectionExit, SelectionInvalid, SelectionOk, prompt_selection, prompt_text
@@ -11,6 +11,42 @@ from .prompting import SelectionBack, SelectionExit, SelectionInvalid, Selection
 
 _RC_EXIT = 0
 _RC_BACK = 1
+
+
+def _refresh_menu(menu_vars: MenuVars) -> bool:
+    hosts = load_host_aliases(menu_vars.transport.config_file)
+    if not hosts:
+        menu_vars.main_hosts = []
+        menu_vars.group_map = {}
+        menu_vars.group_names = []
+        menu_vars.labels = []
+        menu_vars.types = []
+        menu_vars.values = []
+        return False
+
+    categorized = categorize_hosts(hosts)  # extract shared logic with setup_menu into helper
+    menu_vars.main_hosts = categorized.main_hosts
+    menu_vars.group_map = categorized.group_map
+    menu_vars.group_names = categorized.group_names
+
+    labels: list[str] = []
+    types: list[str] = []
+    values: list[str] = []
+
+    for h in menu_vars.main_hosts:
+        labels.append(h.upper())
+        types.append("host")
+        values.append(h)
+
+    for g in menu_vars.group_names:
+        labels.append(g.upper())
+        types.append("group")
+        values.append(g)
+
+    menu_vars.labels = labels
+    menu_vars.types = types
+    menu_vars.values = values
+    return True
 
 
 def setup_menu() -> MenuVars | None:
@@ -75,7 +111,7 @@ def render_menu(title: str, subtitle: str, labels: list[str], *,
         print(f"\n{Ansi.RED}{message}{Ansi.RESET}")
 
 
-# main menu loop, returns 0 on successful connection or exit
+# main connect menu loop, returns 0 on successful connection or exit
 def main_menu(
     last_msg: list[str],
     main_title: str,
@@ -85,6 +121,11 @@ def main_menu(
     on_host_selected: HostAction,
 ) -> int:
     while True:
+        if not _refresh_menu(menu_vars):
+            last_msg[0] = f"No hosts found in {menu_vars.transport.config_file}"
+            clear_screen()
+            return _RC_EXIT
+
         msg = last_msg[0]
         last_msg[0] = ""
         render_menu(main_title, main_subtitle, menu_vars.labels, types=menu_vars.types, message=msg)
@@ -180,7 +221,7 @@ def add_or_list_menu(config_file: Path, menu_vars: MenuVars, last_msg: list[str]
             menu_title = "EXISTING HOSTS"
             menu_subtitle = f"Listing hosts in configuration file: {Ansi.MAGENTA}{config_file}{Ansi.RESET}"
             menu_subtitle += f"\n\nSelect a host to view details, or {Ansi.RED}E{Ansi.RESET} to exit back to main menu"
-            main_menu(last_msg, menu_title, menu_subtitle, menu_vars=menu_vars, on_host_selected=show_host_details) # how do params work here?
+            main_menu(last_msg, menu_title, menu_subtitle, menu_vars=menu_vars, on_host_selected=show_host_details)
         if sel.lower() == "e":
             clear_screen()
             return False
@@ -195,7 +236,17 @@ def show_host_details(host_label: str, transport: Transport, *, last_msg_out: li
     print(f"Host: {format_host_display(host_label)}\n\n")
     format_host_details(hostname, port, hostkey, kex, macs)
 
-    prompt_text(f"Press {Ansi.GREEN}Enter{Ansi.RESET} to continue...")
+    prompt_display = f"\nType {Ansi.GREEN}E{Ansi.RESET} to edit "
+    prompt_display += f"or {Ansi.MAGENTA}B{Ansi.RESET} to go back to the previous menu."
+    prompt_display += f"\nOr type {Ansi.RED}DELETE{Ansi.RESET} to remove this host entry: "
+    resp = prompt_text(prompt_display)
+    if resp.strip().upper() == "DELETE":
+        remove_host_entry(host_label, transport.config_file)
+        last_msg_out[0] = f"Host {host_label.upper()} deleted."
+        return False
+    if resp.strip().lower() == "e":
+        last_msg_out[0] = f"Editing host {host_label.upper()} selected."
+        return True  # FINISH THIS, NEED TO RETURN TO ADD HOST FLOW AND NOT DO THIS DURING ALGORITHM PROMPTING
     last_msg_out[:] = [""]
     return False
 

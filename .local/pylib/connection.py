@@ -200,6 +200,9 @@ def _message_for_connect_rc(
 
     Returns None for success (meaning: clear last message).
     """
+
+    host_display = format_host_display(host_label)
+
     if rc == _RC_SUCCESS:
         return None
     if rc == _RC_CANCELLED:
@@ -207,14 +210,14 @@ def _message_for_connect_rc(
     if rc == _RC_TIMEOUT:
         return [f"Connection timed out after {timeout_seconds}s"]
     if rc == _RC_LOOKUP_FAILURE:
-        return [f"Could not resolve hostname for {Ansi.GREEN}{host_label}{Ansi.RESET}"]
+        return [f"Could not resolve hostname for {host_display}"]
 
     if protocol == "ssh" and rc == _RC_USERNAME_REQUIRED:
         return ["Error: username required"]
     if protocol == "telnet" and rc == _RC_NO_HOSTNAME:
         return [
-            f"No telnet hostname/IP configured for {Ansi.GREEN}{host_label}{Ansi.RESET}\n"
+            f"No telnet hostname/IP configured for {host_display}\n"
             f"{Ansi.YELLOW}Note{Ansi.RESET}: ~/.telnet/config should have an empty newline at the end of the file."
         ]
 
-    return [f"Connection to {host_label} failed — returned to menu"]
+    return [f"Connection to {host_display} failed — returned to menu"]

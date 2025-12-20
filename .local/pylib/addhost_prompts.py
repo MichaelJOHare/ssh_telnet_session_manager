@@ -171,6 +171,7 @@ def prompt_port(current: str, last_msg: list[str]) -> PromptResult[str]:
 
 def prompt_configure_algorithms(
     host_alias: str,
+    hostname: str,
     port: str,
     hostkey: str,
     kex: str,
@@ -194,7 +195,7 @@ def prompt_configure_algorithms(
 
         if choice == "?":
             print(f"\nCurrent algorithm settings for host {Ansi.GREEN}{host_alias}{Ansi.RESET}:")
-            format_host_details(host_alias, port, hostkey, kex, macs)
+            format_host_details(hostname, port, hostkey, kex, macs)
             prompt_text(f"\nPress {Ansi.GREEN}Enter{Ansi.RESET} to continue...")
             print()
             continue

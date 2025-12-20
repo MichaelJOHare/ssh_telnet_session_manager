@@ -25,5 +25,6 @@ def run_vmsmenu() -> int:
         main_subtitle,
         menu_vars,
         on_host_selected=attempt_connection,
+        refresh_menu=False,
     )
     return rc

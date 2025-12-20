@@ -29,7 +29,8 @@ def run_addhost() -> int:
             return 0
         
         transport, group_names = menu_vars.transport, menu_vars.group_names
-        if not add_or_list_menu(transport.config_file, menu_vars, last_msg):
+        proceed, edit_host = add_or_list_menu(transport.config_file, menu_vars, last_msg)
+        if not proceed:
             return 0
 
         clear_screen()
@@ -45,17 +46,18 @@ def run_addhost() -> int:
             print(f"{Ansi.RED}{last_msg[0]}{Ansi.RESET}\n")
             last_msg[0] = ""
 
-        host_alias: str = ""
-        aliases = load_host_aliases(transport.config_file)
-        nickname_result = prompt_nickname(aliases, last_msg)
-        match nickname_result:
-            case PromptCancel():
-                clear_screen()
-                return 0
-            case PromptInvalid():
-                continue
-            case PromptOk(value=value):
-                host_alias = str(value)
+        host_alias: str = edit_host or ""
+        if not host_alias:
+            aliases = load_host_aliases(transport.config_file)
+            nickname_result = prompt_nickname(aliases, last_msg)
+            match nickname_result:
+                case PromptCancel():
+                    clear_screen()
+                    return 0
+                case PromptInvalid():
+                    continue
+                case PromptOk(value=value):
+                    host_alias = str(value)
 
         is_editing = False
         original_alias = ""
@@ -119,7 +121,7 @@ def run_addhost() -> int:
 
         if transport.key == "ssh":
             while True:
-                algo_result = prompt_configure_algorithms(host_alias, port, hostkey, kex, macs, last_msg)
+                algo_result = prompt_configure_algorithms(host_alias, hostname, port, hostkey, kex, macs, last_msg)
                 match algo_result:
                     case PromptOk(value=(hostkey, kex, macs)):
                         break

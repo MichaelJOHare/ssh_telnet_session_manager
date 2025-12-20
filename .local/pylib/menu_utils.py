@@ -13,40 +13,56 @@ _RC_EXIT = 0
 _RC_BACK = 1
 
 
-def _refresh_menu(menu_vars: MenuVars) -> bool:
-    hosts = load_host_aliases(menu_vars.transport.config_file)
-    if not hosts:
-        menu_vars.main_hosts = []
-        menu_vars.group_map = {}
-        menu_vars.group_names = []
-        menu_vars.labels = []
-        menu_vars.types = []
-        menu_vars.values = []
-        return False
-
-    categorized = categorize_hosts(hosts)  # extract shared logic with setup_menu into helper
-    menu_vars.main_hosts = categorized.main_hosts
-    menu_vars.group_map = categorized.group_map
-    menu_vars.group_names = categorized.group_names
-
+def _build_menu_lists(
+        main_hosts: list[str], 
+        group_names: list[str]
+) -> tuple[list[str], list[str], list[str]]:
     labels: list[str] = []
     types: list[str] = []
     values: list[str] = []
 
-    for h in menu_vars.main_hosts:
-        labels.append(h.upper())
+    for host in main_hosts:
+        labels.append(host.upper())
         types.append("host")
-        values.append(h)
+        values.append(host)
 
-    for g in menu_vars.group_names:
-        labels.append(g.upper())
+    for group in group_names:
+        labels.append(group.upper())
         types.append("group")
-        values.append(g)
+        values.append(group)
 
+    return labels, types, values
+
+
+def _clear_menu_vars(menu_vars: MenuVars) -> None:
+    menu_vars.main_hosts = []
+    menu_vars.group_map = {}
+    menu_vars.group_names = []
+    menu_vars.labels = []
+    menu_vars.types = []
+    menu_vars.values = []
+
+
+def _populate_menu_vars(menu_vars: MenuVars, *, hosts: list[str]) -> bool:
+    if not hosts:
+        _clear_menu_vars(menu_vars)
+        return False
+
+    categorized = categorize_hosts(hosts)
+    menu_vars.main_hosts = categorized.main_hosts
+    menu_vars.group_map = categorized.group_map
+    menu_vars.group_names = categorized.group_names
+
+    labels, types, values = _build_menu_lists(menu_vars.main_hosts, menu_vars.group_names)
     menu_vars.labels = labels
     menu_vars.types = types
     menu_vars.values = values
     return True
+
+
+def _refresh_menu(menu_vars: MenuVars) -> bool:
+    hosts = load_host_aliases(menu_vars.transport.config_file)
+    return _populate_menu_vars(menu_vars, hosts=hosts)
 
 
 def setup_menu() -> MenuVars | None:
@@ -67,19 +83,7 @@ def setup_menu() -> MenuVars | None:
         categorized.group_names,
     )
 
-    labels: list[str] = []
-    types: list[str] = []
-    values: list[str] = []
-
-    for h in main_hosts:
-        labels.append(h.upper())
-        types.append("host")
-        values.append(h)
-
-    for g in group_names:
-        labels.append(g.upper())
-        types.append("group")
-        values.append(g)
+    labels, types, values = _build_menu_lists(main_hosts, group_names)
 
     return MenuVars(
         main_hosts=main_hosts,
@@ -93,8 +97,14 @@ def setup_menu() -> MenuVars | None:
 
 
 # render the menu with title, subtitle, labels, optional types, and optional message
-def render_menu(title: str, subtitle: str, labels: list[str], *, 
-                types: list[str] | None = None, message: str = "") -> None:
+def render_menu(
+        title: str, 
+        subtitle: str, 
+        labels: list[str], 
+        *, 
+        types: list[str] | None = None, 
+        message: str = ""
+) -> None:
     clear_screen()
     print(f"\n------------------------{title}------------------------\n")
     if subtitle:
@@ -119,12 +129,14 @@ def main_menu(
     menu_vars: MenuVars,
     *,
     on_host_selected: HostAction,
+    refresh_menu: bool = True,
 ) -> int:
     while True:
-        if not _refresh_menu(menu_vars):
-            last_msg[0] = f"No hosts found in {menu_vars.transport.config_file}"
-            clear_screen()
-            return _RC_EXIT
+        if refresh_menu:
+            if not _refresh_menu(menu_vars):
+                last_msg[0] = f"No hosts found in {menu_vars.transport.config_file}"
+                clear_screen()
+                return _RC_EXIT
 
         msg = last_msg[0]
         last_msg[0] = ""
@@ -208,7 +220,11 @@ def group_menu(
             return _RC_EXIT
         
 
-def add_or_list_menu(config_file: Path, menu_vars: MenuVars, last_msg: list[str]) -> bool:
+def add_or_list_menu(
+    config_file: Path,
+    menu_vars: MenuVars,
+    last_msg: list[str],
+) -> tuple[bool, str | None]:
     while True:
         clear_screen()
         print("\n-----------------ADD OR LIST HOSTS--------------------\n")
@@ -216,19 +232,43 @@ def add_or_list_menu(config_file: Path, menu_vars: MenuVars, last_msg: list[str]
         print(f"2) {Ansi.MAGENTA}List{Ansi.RESET} existing {Ansi.GREEN}hosts{Ansi.RESET}")
         sel = prompt_text(f"\nEnter selection (or {Ansi.RED}E{Ansi.RESET} to exit) [{Ansi.GREEN}1{Ansi.RESET}]: ").strip()
         if sel in ("", "1"):
-            return True
+            return True, None
         if sel == "2":
             menu_title = "EXISTING HOSTS"
             menu_subtitle = f"Listing hosts in configuration file: {Ansi.MAGENTA}{config_file}{Ansi.RESET}"
             menu_subtitle += f"\n\nSelect a host to view details, or {Ansi.RED}E{Ansi.RESET} to exit back to main menu"
-            main_menu(last_msg, menu_title, menu_subtitle, menu_vars=menu_vars, on_host_selected=show_host_details)
+            edit_host_out: list[str] = [""]
+
+            def _on_host_selected(host_label: str, transport: Transport, *, last_msg_out: list[str]) -> bool:
+                return show_host_details(
+                    host_label,
+                    transport,
+                    last_msg_out=last_msg_out,
+                    edit_host_out=edit_host_out,
+                )
+
+            main_menu(
+                last_msg,
+                menu_title,
+                menu_subtitle,
+                menu_vars=menu_vars,
+                on_host_selected=_on_host_selected,
+            )
+            if edit_host_out[0]:
+                return True, edit_host_out[0]
         if sel.lower() == "e":
             clear_screen()
-            return False
+            return False, None
         print(f"{Ansi.RED}Invalid selection.{Ansi.RESET}")
 
 
-def show_host_details(host_label: str, transport: Transport, *, last_msg_out: list[str]) -> bool:
+def show_host_details(
+    host_label: str,
+    transport: Transport,
+    *,
+    last_msg_out: list[str],
+    edit_host_out: list[str] | None = None,
+) -> bool:
     hostname, port, hostkey, kex, macs = read_host_values(host_label, transport.config_file)
 
     clear_screen()
@@ -245,8 +285,9 @@ def show_host_details(host_label: str, transport: Transport, *, last_msg_out: li
         last_msg_out[0] = f"Host {host_label.upper()} deleted."
         return False
     if resp.strip().lower() == "e":
-        last_msg_out[0] = f"Editing host {host_label.upper()} selected."
-        return True  # FINISH THIS, NEED TO RETURN TO ADD HOST FLOW AND NOT DO THIS DURING ALGORITHM PROMPTING
+        if edit_host_out is not None:
+            edit_host_out[0] = host_label
+        return True
     last_msg_out[:] = [""]
     return False
 

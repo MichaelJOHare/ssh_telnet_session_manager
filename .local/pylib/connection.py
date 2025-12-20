@@ -19,7 +19,7 @@ _RC_USERNAME_REQUIRED = 2
 _RC_NO_HOSTNAME = 3
 _RC_TIMEOUT = 124
 _RC_CANCELLED = 130
-_RC_LOOKUP_FAILURE = 255
+_RC_LOOKUP_FAILURE = -2
 
 _CONNECT_TIMEOUT_SECONDS = 10
 
@@ -43,13 +43,19 @@ def _tcp_connect_with_countdown(hostname: str, port: int, timeout_seconds: int) 
     if timeout_seconds <= 0:
         timeout_seconds = 1
 
+    def _clear_status_line() -> None:
+        # clear any in-place countdown/status output for immediate failures or completion
+        print("\r" + (" " * 200) + "\r", end="", flush=True)
+
     try:
         # resolve once up front so obvious failures are immediate
         addrinfos = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
     except KeyboardInterrupt:
+        _clear_status_line()
         return _RC_CANCELLED
     except OSError:
         # DNS/lookup failures should just be treated as a failure
+        _clear_status_line()
         return _RC_LOOKUP_FAILURE
 
     last_err = 1
@@ -67,26 +73,31 @@ def _tcp_connect_with_countdown(hostname: str, port: int, timeout_seconds: int) 
             # wait with countdown
             remaining = timeout_seconds
             display_host = f"{Ansi.GREEN}{hostname}{Ansi.RESET}:{Ansi.MAGENTA}{port}{Ansi.RESET}"
+            status_printed = False
             while remaining > 0:
+                status_printed = True
                 print(f"\rAttempting to connect to {display_host}... timeout in {remaining:2d}s", end="", flush=True)
                 try:
                     _, writable, _ = select.select([], [sock], [], 1)
                 except KeyboardInterrupt:
-                    print("\r", end="", flush=True)
+                    _clear_status_line()
                     return _RC_CANCELLED
 
                 # check if socket is writable (connected)
                 if writable:
                     so_error = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
                     if so_error == 0:
-                        print("\rConnecting...                           \n", end="", flush=True)
+                        if status_printed:
+                            _clear_status_line()
                         return _RC_SUCCESS
                     last_err = so_error or 1
                     break
                 remaining -= 1
 
-            last_err = _RC_TIMEOUT
+            if remaining <= 0:
+                last_err = _RC_TIMEOUT
         except KeyboardInterrupt:
+            _clear_status_line()
             return _RC_CANCELLED
         except OSError as e:
             last_err = getattr(e, "errno", 1) or 1
@@ -113,7 +124,7 @@ def _msys2_exe(name: str) -> str:
     return name
 
 
-def ssh_connect(host_alias: str, transport: Transport, *, 
+def ssh_connect(host_alias: str, hostname: str, port: str, *, 
                 timeout_seconds: int = _CONNECT_TIMEOUT_SECONDS) -> int:
     try:
         user = prompt_text(f"{Ansi.MAGENTA}login{Ansi.RESET} as: ").strip()
@@ -127,13 +138,10 @@ def ssh_connect(host_alias: str, transport: Transport, *,
     print(f"Connecting to {display_host} as {Ansi.MAGENTA}{user}{Ansi.RESET}...")
     set_title(f"{user}@{host_alias}")
     try:
-        hostname, port_text, *_ = read_host_values(host_alias, transport.config_file)
-        if hostname:
-            port = _parse_port(port_text, 22)
-            rc = _tcp_connect_with_countdown(hostname, port, timeout_seconds)
-            if rc != _RC_SUCCESS:
-                print()
-                return rc
+        rc = _tcp_connect_with_countdown(hostname, _parse_port(port, 22), timeout_seconds)
+        if rc != _RC_SUCCESS:
+            print()
+            return rc
 
         ssh_exe = _msys2_exe("ssh")
         try:
@@ -146,11 +154,9 @@ def ssh_connect(host_alias: str, transport: Transport, *,
         set_title("VMS MENU")
 
 
-def telnet_connect(host_alias: str, config_file: Path, *, 
+def telnet_connect(host_alias: str, hostname: str, port: str, *, 
                    timeout_seconds: int = _CONNECT_TIMEOUT_SECONDS) -> int:
-    hostname, port, *_ = read_host_values(host_alias, config_file)
-    if not hostname:
-        return _RC_NO_HOSTNAME
+
     clear_screen()
     display_host = format_host_display(host_alias)
     print(f"Connecting to {display_host} via telnet...")
@@ -162,7 +168,8 @@ def telnet_connect(host_alias: str, config_file: Path, *,
             return rc
         telnet_exe = _msys2_exe("telnet")
         try:
-            result = subprocess.run([telnet_exe, hostname, str(port or "23")])
+            telnet_args = [telnet_exe, hostname, str(port or "23")]
+            result = subprocess.run(telnet_args)
             return result.returncode
         except KeyboardInterrupt:
             return _RC_CANCELLED
@@ -172,17 +179,21 @@ def telnet_connect(host_alias: str, config_file: Path, *,
 
 def attempt_connection(host_label: str, transport: Transport, *, 
                        last_msg_out: list[str]) -> bool:
-    timeout_seconds = _CONNECT_TIMEOUT_SECONDS
+    
+    hostname, port, *_ = read_host_values(host_label, transport.config_file)
+    if not hostname:
+        msg = _RC_NO_HOSTNAME
+        return False
 
     if transport.key == "ssh":
-        rc = ssh_connect(host_label, transport, timeout_seconds=timeout_seconds)
+        rc = ssh_connect(host_label, hostname, port, timeout_seconds=_CONNECT_TIMEOUT_SECONDS)
         msg = _message_for_connect_rc(
-            rc, host_label, protocol="ssh", timeout_seconds=timeout_seconds
+            rc, host_label, protocol="ssh", timeout_seconds=_CONNECT_TIMEOUT_SECONDS
         )
     else:
-        rc = telnet_connect(host_label, transport.config_file, timeout_seconds=timeout_seconds)
+        rc = telnet_connect(host_label, hostname, port, timeout_seconds=_CONNECT_TIMEOUT_SECONDS)
         msg = _message_for_connect_rc(
-            rc, host_label, protocol="telnet", timeout_seconds=timeout_seconds
+            rc, host_label, protocol="telnet", timeout_seconds=_CONNECT_TIMEOUT_SECONDS
         )
 
     last_msg_out[:] = [""] if msg is None else msg
